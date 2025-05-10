@@ -34,7 +34,7 @@ func main() {
 	ip := os.Args[1]
 	if net.ParseIP(ip) != nil {
 		if DEBUG {
-			fmt.Printf("DEBUG: IP address is  %s valid", ip)
+			fmt.Printf("DEBUG: IP address is  %s valid\n", ip)
 		}
 		if lping(ip) {
 			os.Exit(0) // Exit with code 0 if gping returns true

@@ -54,12 +54,25 @@ func lping(ip string) bool {
 		}
 		conn.SetReadDeadline(time.Now().Add(timeout))
 		reply := make([]byte, 1500)
-		n, _, err := conn.ReadFrom(reply) // n - количество прочитанных байтов
+		n, _, err := conn.ReadFrom(reply)
 		if err == nil {
-			if DEBUG {
-				fmt.Printf("Received reply: %x\n", reply[:n]) // Вывод только прочитанных байтов
+			parsedMsg, err := icmp.ParseMessage(protocolICMP, reply[:n])
+			if err != nil {
+				if DEBUG {
+					fmt.Println("Error parsing ICMP message:", err)
+				}
+				continue
 			}
-			return true
+		
+			// Проверяем, что это ICMP Echo Reply
+			if parsedMsg.Type == ipv4.ICMPTypeEchoReply {
+				if DEBUG {
+					fmt.Printf("Received Echo Reply: %x\n", reply[:n])
+				}
+				return true
+			} else if DEBUG {
+				fmt.Printf("Received unexpected ICMP message: Type=%v, Code=%v\n", parsedMsg.Type, parsedMsg.Code)
+			}
 		} else if DEBUG {
 			fmt.Println("No reply received or error:", err)
 		}
