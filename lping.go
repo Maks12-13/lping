@@ -9,12 +9,10 @@ import (
 	"golang.org/x/net/ipv4"
 )
 
-func lping(ip string) bool {
+func lping(ip string, countInt int, waitTime int) bool {
 	const (
 		icmpEchoRequest = 8
 		protocolICMP    = 1
-		timeout         = 2 * time.Second
-		packetCount     = 3
 	)
 
 	conn, err := icmp.ListenPacket("ip4:icmp", "0.0.0.0")
@@ -30,7 +28,7 @@ func lping(ip string) bool {
 		return false
 	}
 
-	for i := 0; i < packetCount; i++ {
+	for i := 0; i < countInt; i++ {
 		msg := icmp.Message{
 			Type: ipv4.ICMPTypeEcho,
 			Code: 0,
@@ -52,7 +50,7 @@ func lping(ip string) bool {
 			fmt.Println("Error sending ICMP request:", err)
 			return false
 		}
-		conn.SetReadDeadline(time.Now().Add(timeout))
+		conn.SetReadDeadline(time.Now().Add(time.Duration(waitTime) * time.Second))
 		reply := make([]byte, 1500)
 		n, _, err := conn.ReadFrom(reply)
 		if err == nil {
@@ -63,7 +61,7 @@ func lping(ip string) bool {
 				}
 				continue
 			}
-		
+
 			// Проверяем, что это ICMP Echo Reply
 			if parsedMsg.Type == ipv4.ICMPTypeEchoReply {
 				if DEBUG {
